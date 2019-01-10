@@ -1,25 +1,61 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "Activity Data"
+output: html_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
-## Loading and preprocessing the data
+### Loading and Processing the Data
+```{r}
+result <- read.csv("activity.csv")
+```
 
+### Total number steps taken per day
+```{r}
+spd <- tapply(result$steps, result$date, FUN = sum)
+hist(spd, main = "Steps per day", xlab = "Steps", breaks = 20)
+```
 
+### Mean
+```{r}
+mean(spd, na.rm = TRUE)
+```
 
-## What is mean total number of steps taken per day?
+### Median
+```{r}
+median(spd, na.rm = TRUE)
+```
 
+### Plot time series of the avrage steps taken
+```{r}
+library(ggplot2)
+avg <- aggregate(steps ~ interval, data = result, FUN = mean, na.rm = TRUE)
+ggplot(avg, aes(interval, steps)) + geom_line() + xlab("5 minute interval") + ylab("avg of steps")
+```
 
+### 5 minute interval that on average, contains the maximum number of steps
+```{r}
+avg$interval[which.max(avg$steps)]
+```
 
-## What is the average daily activity pattern?
+### Total of missing values
+```{r}
+sum(is.na(result))
+```
 
+### Fill missing values with 5 minutes mean value
+```{r}
+spi_avg <- tapply(result$steps, result$interval, FUN = mean, na.rm = TRUE)
+activity <- result
+na <- is.na(activity$steps)
+activity$steps[na] <- spi_avg[as.character(activity$interval[na])]
+sum(is.na(activity))
+```
 
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
+### Histogram of steps taken per day with no missing data
+```{r}
+activity2 <- aggregate(steps ~ date, data = activity, FUN = sum, na.rm = TRUE)
+hist(activity2$steps, main = "Steps per day no missing data", xlab = "Steps", breaks = 20)
+```
